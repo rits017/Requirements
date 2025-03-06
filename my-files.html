@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Files</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f4f4f9;
+        }
+        header {
+            width: 100%;
+            background: #333;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+        }
+        table {
+            width: 80%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #333;
+            color: white;
+        }
+        .button-container {
+            margin: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            background-color: #007BFF;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>My Files</h1>
+    </header>
+
+    <div class="button-container">
+        <button onclick="navigateToViewAnalysis()">Go to View Analysis</button>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>File Name</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody id="file-table">
+            <!-- File rows will be dynamically added here -->
+        </tbody>
+    </table>
+
+    <script>
+        // Mock data to simulate files and their analysis status
+        const files = [
+            { name: "file1.xlsx", analyzed: true },
+            { name: "file2.xlsx", analyzed: false },
+            { name: "file3.xlsx", analyzed: true },
+        ];
+
+        // Populate the table with analyzed files
+        function loadFiles() {
+            const tableBody = document.getElementById("file-table");
+            tableBody.innerHTML = ""; // Clear existing rows
+
+            files.forEach(file => {
+                if (file.analyzed) {
+                    const row = document.createElement("tr");
+
+                    const fileNameCell = document.createElement("td");
+                    fileNameCell.textContent = file.name;
+                    row.appendChild(fileNameCell);
+
+                    const statusCell = document.createElement("td");
+                    statusCell.textContent = "Analyzed";
+                    row.appendChild(statusCell);
+
+                    tableBody.appendChild(row);
+                }
+            });
+        }
+
+        // Navigate to View Analysis page
+        function navigateToViewAnalysis() {
+            window.location.href = "analysis-dashboard.html"; // Update with correct path if needed
+        }
+
+        // Load files on page load
+        window.onload = loadFiles;
+    </script>
+</body>
+</html>

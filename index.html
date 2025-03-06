@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to Team Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .welcome-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .welcome-title {
+            font-size: 2.5em;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .welcome-subtitle {
+            font-size: 1.2em;
+            color: #666;
+            margin-bottom: 50px;
+        }
+
+        .nav-cards-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .nav-card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            text-decoration: none;
+            color: #333;
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 250px;
+        }
+
+        .nav-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+        }
+
+        .card-icon {
+            font-size: 3em;
+            margin-bottom: 20px;
+            color: #0066cc;
+        }
+
+        .card-title {
+            font-size: 1.5em;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .card-description {
+            color: #666;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 768px) {
+            .welcome-title {
+                font-size: 2em;
+            }
+
+            .nav-cards-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="welcome-container">
+        <h1 class="welcome-title">Welcome to Team Dashboard</h1>
+        <p class="welcome-subtitle">Access your team analysis and manage your files in one place</p>
+        
+        <div class="nav-cards-container">
+            <a href="analysis-dashboard.html" class="nav-card">
+                <div class="card-icon">📊</div>
+                <h2 class="card-title">View Analysis</h2>
+                <p class="card-description">Access detailed team performance metrics, charts, and status updates</p>
+            </a>
+            
+            <a href="my-files.html" class="nav-card">
+                <div class="card-icon">📁</div>
+                <h2 class="card-title">My Files</h2>
+                <p class="card-description">Manage your uploaded files, templates, and documentation</p>
+            </a>
+            <a href="central-team-view.html" class="nav-card">
+                <div class="card-icon">👥</div>
+                <h2 class="card-title">Central Team View</h2>
+                <p class="card-description">View daily site status across all teams and milestones</p>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // Add click handlers for navigation
+        document.querySelectorAll('.nav-card').forEach(card => {
+        card.addEventListener('click', (e) => {
+            e.preventDefault();
+            const href = card.getAttribute('href');
+            window.location.href = href; // This will navigate to the appropriate page
+        });
+    });
+    </script>
+</body>
+</html>

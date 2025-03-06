@@ -1,0 +1,1411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Central Team View - Daily Status</title>
+    <!-- Load React -->
+    <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+    <!-- Load Babel -->
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --primary-hover: #1d4ed8;
+            --success-color: #22c55e;
+            --success-hover: #16a34a;
+            --warning-color: #eab308;
+            --danger-color: #ef4444;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f3f4f6;
+            min-height: 100vh;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            margin: 24px auto;
+            max-width: 1200px;
+            padding: 24px;
+        }
+
+        .header {
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            margin-right: 12px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background-color: var(--success-color);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--success-hover);
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 24px;
+        }
+
+        .table th, .table td {
+            padding: 16px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .table th {
+            background-color: #f8fafc;
+            font-weight: 600;
+            color: #475569;
+        }
+
+        .table tr:hover {
+            background-color: #f8fafc;
+        }
+
+        .error {
+            color: var(--danger-color);
+            padding: 12px;
+            margin: 12px 0;
+            background-color: #fee2e2;
+            border-radius: 6px;
+            border: 1px solid #fecaca;
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            display: inline-block;
+            transition: all 0.2s ease;
+        }
+
+        .status-completed {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+
+        .status-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+
+        .status-pending {
+            background-color: #fef9c3;
+            color: #854d0e;
+        }
+
+        .login-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .login-box {
+            background: white;
+            padding: 32px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px -5px rgb(0 0 0 / 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .login-input {
+            width: 100%;
+            padding: 12px;
+            margin: 12px 0;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            transition: border-color 0.2s ease;
+        }
+
+        .login-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .login-button {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 12px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .login-button:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        .login-error {
+            color: var(--danger-color);
+            margin-top: 12px;
+            text-align: center;
+            font-size: 0.875rem;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding: 1.5rem;
+            background-color: #f8fafc;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .search-input {
+            flex: 1;
+            max-width: 300px;
+            padding: 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .search-button {
+            padding: 12px 24px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .search-button:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        .history-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .history-content {
+            background: white;
+            padding: 32px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px -5px rgb(0 0 0 / 0.1);
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .close-button {
+            float: right;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #64748b;
+            transition: color 0.2s ease;
+            padding: 4px;
+            margin: -4px;
+        }
+
+        .close-button:hover {
+            color: #334155;
+        }
+
+        .date-input {
+            padding: 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            width: 100%;
+        }
+
+        .date-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        @media (max-width: 640px) {
+            .card {
+                margin: 16px;
+                padding: 16px;
+            }
+
+            .search-box {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-input {
+                max-width: none;
+            }
+        }
+        .matrix-table {
+    overflow-x: auto;
+    max-width: 100%;
+    margin-top: 20px;
+    position: relative;
+}
+
+.matrix-table table {
+    border-collapse: separate;
+    border-spacing: 0;
+    min-width: 100%;
+    table-layout: fixed;
+}
+
+.matrix-table th {
+    background-color: #f8fafc;
+    padding: 12px;
+    text-align: center;
+    border: 1px solid #e5e7eb;
+    white-space: nowrap;
+    min-width: 120px;
+}
+
+.matrix-table td {
+    padding: 12px;
+    text-align: center;
+    border: 1px solid #e5e7eb;
+    min-width: 120px;
+}
+
+.matrix-table tr:nth-child(even) {
+    background-color: #f8fafc;
+}
+
+.matrix-container {
+    margin-top: 2rem;
+    padding: 1rem;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.matrix-table th:first-child,
+.matrix-table td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background-color: inherit;
+}
+/* Add these styles to your existing CSS */
+.matrix-wrapper {
+    display: flex;
+    width: 100%;
+    position: relative;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.fixed-column {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background: white;
+    border-right: 2px solid #e5e7eb;
+}
+
+.fixed-column table {
+    border-collapse: collapse;
+}
+
+.fixed-column th,
+.fixed-column td {
+    min-width: 150px;
+    max-width: 150px;
+    padding: 12px;
+    background: white;
+    border-bottom: 1px solid #e5e7eb;
+    text-align: left;
+}
+
+.fixed-column th {
+    background: #f8fafc;
+    font-weight: 600;
+    color: #475569;
+}
+
+.scroll-container {
+    overflow-x: auto;
+    overflow-y: hidden;
+    flex-grow: 1;
+}
+
+.scroll-container table {
+    border-collapse: collapse;
+    width: max-content;
+}
+
+.scroll-container th,
+.scroll-container td {
+    min-width: 120px;
+    padding: 12px;
+    border: 1px solid #e5e7eb;
+    text-align: center;
+}
+
+.scroll-container th {
+    background: #f8fafc;
+    font-weight: 600;
+    color: #475569;
+}
+
+.scroll-container tr:nth-child(even),
+.fixed-column tr:nth-child(even) td {
+    background-color: #f8fafc;
+}
+
+.matrix-wrapper .status-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    align-items: center;
+}
+
+/* Update existing status badge styles */
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+/* Ensure tables align properly */
+.fixed-column table,
+.scroll-container table {
+    table-layout: fixed;
+}
+
+/* Ensure the fixed column aligns with scrollable content */
+.fixed-column th,
+.scroll-container th {
+    height: 48px; /* Adjust this value to match your actual header height */
+}
+
+.fixed-column td,
+.scroll-container td {
+    height: 40px; /* Adjust this value to match your actual row height */
+}
+
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+ 
+    <script type="text/babel">
+        // Authentication component
+        function LoginScreen({ onLogin }) {
+            const [password, setPassword] = React.useState('');
+            const [error, setError] = React.useState('');
+ 
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                if (password === 'central2024') {
+                    localStorage.setItem('centralTeamAuth', 'true');
+                    onLogin();
+                } else {
+                    setError('Invalid password. Please try again.');
+                }
+            };
+ 
+            return (
+                <div className="login-container">
+                    <div className="login-box">
+                        <h2 className="text-2xl font-bold mb-6">Central Team View Access</h2>
+                        <form onSubmit={handleSubmit}>
+                            <input
+                                type="password"
+                                className="login-input"
+                                placeholder="Enter password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                            />
+                            <button type="submit" className="login-button">
+                                Login
+                            </button>
+                            {error && <div className="login-error">{error}</div>}
+                        </form>
+                    </div>
+                </div>
+            );
+        }
+
+        function HistoryModal({ uniqueId, history, onClose }) {
+            if (!history) return null;
+
+            return (
+                <div className="history-modal">
+                    <div className="history-content">
+                        <button className="close-button" onClick={onClose}>&times;</button>
+                        <h2 className="text-2xl font-bold mb-6">Status History for {uniqueId}</h2>
+                        <table className="table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {history.map((entry, index) => (
+                                    <tr key={index}>
+                                        <td>{entry.date}</td>
+                                        <td>
+                                            <span className={`status-badge ${getStatusClass(entry.status)}`}>
+                                                {entry.status}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            );
+        }
+
+        function CentralTeamView() {
+    const [isAuthenticated, setIsAuthenticated] = React.useState(false);
+    const [selectedDate, setSelectedDate] = React.useState('');
+    const [statusReport, setStatusReport] = React.useState([]);
+    const [error, setError] = React.useState('');
+    const [searchId, setSearchId] = React.useState('');
+    const [historyData, setHistoryData] = React.useState(null);
+    const [showHistory, setShowHistory] = React.useState(false);
+    const [dateRangeReport, setDateRangeReport] = React.useState([]);
+    const [startDate, setStartDate] = React.useState('');
+    const [matrixData, setMatrixData] = React.useState(null);
+    const [showMatrix, setShowMatrix] = React.useState(false);
+    const [loadedData, setLoadedData] = React.useState([]);
+
+    React.useEffect(() => {
+        const auth = localStorage.getItem('centralTeamAuth');
+        if (auth === 'true') {
+            setIsAuthenticated(true);
+        }
+        
+        // Load all data from localStorage upon component mount
+        loadAllData();
+    }, []);
+
+    // Improved function to load all data from localStorage
+    const loadAllData = () => {
+        try {
+            // Debug localStorage to see what's available
+            debugLocalStorage();
+            
+            const uploadedFiles = JSON.parse(localStorage.getItem('uploadedFiles') || '[]');
+            console.log('Found uploadedFiles:', uploadedFiles.length, 'files');
+            
+            let allData = [];
+            
+            uploadedFiles.forEach(fileInfo => {
+                const fileDataKey = `fileData_${fileInfo.timestamp}`;
+                const fileDataStr = localStorage.getItem(fileDataKey);
+                
+                if (fileDataStr) {
+                    try {
+                        const fileData = JSON.parse(fileDataStr);
+                        console.log(`Loaded ${fileData.length} records from ${fileInfo.name}`);
+                        
+                        if (Array.isArray(fileData)) {
+                            // Process data to ensure consistent format
+                            const processedData = fileData.map(row => {
+                                if (!row) return null;
+                                
+                                return {
+                                    'Unique ID': extractValue(row['Unique ID']),
+                                    'Activity Status': extractValue(row['Activity Status']),
+                                    'Remarks': extractValue(row['Remarks']),
+                                    'Activity Date': row['Activity Date']
+                                };
+                            }).filter(row => row && row['Unique ID'] && row['Unique ID'].trim() !== '');
+                            
+                            allData = [...allData, ...processedData];
+                        }
+                    } catch (e) {
+                        console.error(`Error parsing data for ${fileInfo.name}:`, e);
+                    }
+                }
+            });
+            
+            console.log(`Total records loaded: ${allData.length}`);
+            if (allData.length > 0) {
+                console.log('Sample data:', allData.slice(0, 2));
+            }
+            
+            setLoadedData(allData);
+        } catch (e) {
+            console.error('Error loading data:', e);
+            setError('Error loading uploaded files data');
+        }
+    };
+    
+    // Helper function to debug localStorage
+    const debugLocalStorage = () => {
+        console.log('===== localStorage Debug Information =====');
+        console.log('Total items in localStorage:', Object.keys(localStorage).length);
+        
+        // Check for uploadedFiles entry
+        const uploadedFiles = localStorage.getItem('uploadedFiles');
+        console.log('uploadedFiles exists:', !!uploadedFiles);
+        if (uploadedFiles) {
+            try {
+                const parsedFiles = JSON.parse(uploadedFiles);
+                console.log('Number of uploaded files:', parsedFiles.length);
+                console.log('File details:', parsedFiles);
+                
+                // Check for each file's data
+                parsedFiles.forEach(file => {
+                    const fileKey = `fileData_${file.timestamp}`;
+                    const fileData = localStorage.getItem(fileKey);
+                    console.log(`Data for ${file.name} (key: ${fileKey}) exists:`, !!fileData);
+                    if (fileData) {
+                        try {
+                            const parsedData = JSON.parse(fileData);
+                            console.log(`Records in ${file.name}:`, parsedData.length);
+                            console.log('Sample record:', parsedData[0]);
+                        } catch (e) {
+                            console.error(`Cannot parse data for ${file.name}:`, e);
+                        }
+                    }
+                });
+            } catch (e) {
+                console.error('Cannot parse uploadedFiles:', e);
+            }
+        }
+        
+        // List all localStorage keys that might be relevant
+        console.log('All localStorage keys:');
+        Object.keys(localStorage).forEach(key => {
+            if (key.startsWith('fileData_') || key.includes('file') || key.includes('data')) {
+                console.log(`- ${key} (size: ${localStorage.getItem(key).length} chars)`);
+            }
+        });
+        console.log('===== End Debug Information =====');
+    };
+    
+    // Export matrix data to Excel
+    const exportToExcel = () => {
+        if (!matrixData) return;
+
+        try {
+            let csvContent = "data:text/csv;charset=utf-8,";
+            
+            // Add headers
+            const headers = ["Unique ID", ...matrixData.dates];
+            csvContent += headers.join(",") + "\n";
+
+            // Add data rows
+            matrixData.ids.forEach(id => {
+                const row = [id];
+                matrixData.dates.forEach(date => {
+                    const statuses = matrixData.data[id][date];
+                    row.push(statuses.length > 0 ? `"${statuses.join(', ')}"` : '');
+                });
+                csvContent += row.join(",") + "\n";
+            });
+
+            // Create download link
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `matrix_data_${startDate}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } catch (error) {
+            setError('Error exporting data: ' + error.message);
+        }
+    };
+    
+    // Enhanced function to safely extract values from dropdown objects
+    const extractValue = (field) => {
+        if (field === undefined || field === null) {
+            return '';
+        }
+        
+        // If it's a string or number, return it directly
+        if (typeof field === 'string' || typeof field === 'number') {
+            return field.toString();
+        }
+        
+        // If it's an object that may be a dropdown (has a value property)
+        if (typeof field === 'object') {
+            // Handle dropdown objects with a 'value' property
+            if (field.value !== undefined) {
+                return field.value.toString();
+            }
+            
+            // Handle dropdown objects with a 'label' property
+            if (field.label !== undefined) {
+                return field.label.toString();
+            }
+            
+            // Try to extract text content if it's a DOM-like object
+            if (field.textContent !== undefined) {
+                return field.textContent.toString();
+            }
+            
+            // Last resort: convert to string
+            try {
+                return JSON.stringify(field);
+            } catch (e) {
+                console.error('Error converting field to string:', e);
+                return '';
+            }
+        }
+        
+        return '';
+    };
+    
+    // Improved matrix view generation
+    const generateMatrixView = () => {
+        if (!startDate) {
+            setError('Please select a start date');
+            return;
+        }
+
+        try {
+            if (loadedData.length === 0) {
+                setError('No data available. Please upload data files first.');
+                return;
+            }
+
+            console.log(`Generating matrix view with ${loadedData.length} records`);
+
+            // Get unique IDs from the data
+            const uniqueIds = [...new Set(loadedData
+                .filter(activity => activity['Unique ID'] && activity['Unique ID'].trim() !== '')
+                .map(activity => activity['Unique ID'])
+            )].sort();
+
+            console.log(`Found ${uniqueIds.length} unique IDs for matrix`);
+
+            // Create dates for the matrix
+            const startDateObj = new Date(startDate);
+            const today = new Date();
+            
+            // Create an array of dates from start date to today
+            const dateArray = [];
+            let currentDate = new Date(startDateObj);
+            while (currentDate <= today) {
+                dateArray.push(formatDate(currentDate));
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+
+            // Create matrix data structure
+            const matrix = {
+                dates: dateArray,
+                ids: uniqueIds,
+                data: {}
+            };
+
+            // Initialize data structure with arrays for multiple statuses
+            uniqueIds.forEach(id => {
+                matrix.data[id] = {};
+                dateArray.forEach(date => {
+                    matrix.data[id][date] = [];
+                });
+            });
+
+            // Fill in the data with statuses - improved to catch more activities
+            loadedData.forEach(activity => {
+                const id = activity['Unique ID'];
+                const status = activity['Activity Status'];
+                
+                if (id && status) {
+                    // Get formatted activity date
+                    const activityDate = formatDate(activity['Activity Date']);
+                    
+                    // Check if the date is in our range
+                    if (activityDate !== 'N/A' && dateArray.includes(activityDate)) {
+                        // Add the status to the matrix
+                        if (matrix.data[id] && matrix.data[id][activityDate]) {
+                            // Check if status is already in the array to avoid duplicates
+                            if (!matrix.data[id][activityDate].includes(status)) {
+                                matrix.data[id][activityDate].push(status);
+                            }
+                        }
+                    }
+                }
+            });
+
+            setMatrixData(matrix);
+            setShowMatrix(true);
+            setError('');
+        } catch (error) {
+            setError('Error generating matrix view: ' + error.message);
+            console.error(error);
+        }
+    };
+
+    // Improved milestone status determination
+    const getMilestoneStatus = (statuses) => {
+        if (!statuses || statuses.length === 0) {
+            return 'No Updates Available';
+        }
+        
+        const milestones = ['Installation', 'Integration', 'RFAI Survey'];
+        const mostRecentStatus = statuses[statuses.length - 1];
+        
+        if (!mostRecentStatus) {
+            return 'No Updates Available';
+        }
+        
+        let currentMilestone = null;
+        for (const milestone of milestones) {
+            if (typeof mostRecentStatus === 'string' && mostRecentStatus.includes(milestone)) {
+                currentMilestone = milestone;
+                break;
+            }
+        }
+
+        if (!currentMilestone) {
+            return 'Status: ' + mostRecentStatus;
+        }
+
+        let finalStatus;
+        const statusLower = mostRecentStatus.toLowerCase();
+        
+        if (statusLower.includes('not done')) {
+            finalStatus = `${currentMilestone} Not Done`;
+        } else if (statusLower.includes('done')) {
+            finalStatus = `${currentMilestone} Completed`;
+        } else if (statusLower.includes('work in progress') || statusLower.includes('in progress')) {
+            finalStatus = `${currentMilestone} In Progress`;
+        } else {
+            finalStatus = `${currentMilestone} Pending`;
+        }
+
+        return finalStatus;
+    };
+       
+    // Improved status history search
+    const searchStatusHistory = () => {
+        if (!searchId.trim()) {
+            setError('Please enter a Unique ID');
+            return;
+        }
+
+        try {
+            console.log(`Searching for ID: "${searchId}" in ${loadedData.length} records`);
+            
+            // Filter by the searched ID (case-insensitive)
+            const idActivities = loadedData.filter(activity => {
+                const activityId = activity['Unique ID'];
+                const searchIdStr = searchId.toString().toLowerCase().trim();
+                const activityIdStr = (activityId || '').toString().toLowerCase().trim();
+                
+                return activityIdStr === searchIdStr;
+            });
+
+            console.log(`Found ${idActivities.length} activities for Unique ID: ${searchId}`);
+
+            if (idActivities.length === 0) {
+                setError('No records found for this Unique ID');
+                return;
+            }
+
+            // Create history entries
+            const history = idActivities.map(activity => {
+                const formattedDate = formatDate(activity['Activity Date']);
+                
+                return {
+                    date: formattedDate,
+                    status: activity['Activity Status']
+                };
+            }).filter(item => item.status); // Filter out entries without a status
+
+            // Sort by date if possible
+            const sortedHistory = history.sort((a, b) => {
+                if (a.date === 'N/A' || b.date === 'N/A') return 0;
+                return new Date(a.date) - new Date(b.date);
+            });
+
+            setHistoryData(sortedHistory);
+            setShowHistory(true);
+            setError('');
+        } catch (error) {
+            setError('Error searching status history: ' + error.message);
+            console.error(error);
+        }
+    };
+
+    const handleLogout = () => {
+        localStorage.removeItem('centralTeamAuth');
+        setIsAuthenticated(false);
+    };
+
+    // Improved date conversion function
+    const excelDateToJSDate = (excelDate) => {
+        if (!excelDate) return null;
+        
+        // Check if the input is actually a milestone status string, not a date
+        const milestoneStatuses = [
+            'Integration Work in Progress', 'Integration Done', 'Integration Not Done', 
+            'Integration Status Not Available', 'Installation Done', 'Installation Work in Progress',
+            'Installation Not Done', 'RFAI Survey Done', 'RFAI Survey Work in Progress', 
+            'RFAI Survey Not Done'
+        ];
+        
+        if (typeof excelDate === 'string' && milestoneStatuses.includes(excelDate)) {
+            return null;
+        }
+        
+        // Handle Excel numerical date format
+        if (typeof excelDate === 'number') {
+            // Excel uses days since 1900-01-01, with a leap year bug
+            const millisecondsPerDay = 24 * 60 * 60 * 1000;
+            return new Date((excelDate - 25569) * millisecondsPerDay);
+        }
+        
+        // Try to handle date objects that were parsed by the file uploader
+        if (excelDate instanceof Date || (typeof excelDate === 'object' && excelDate.getTime)) {
+            return new Date(excelDate);
+        }
+        
+        // Handle string dates
+        if (typeof excelDate === 'string') {
+            // Clean the string date
+            const cleanDate = excelDate.trim();
+            
+            // Handle ISO format
+            if (cleanDate.match(/^\d{4}-\d{2}-\d{2}($|T)/)) {
+                return new Date(cleanDate);
+            }
+            
+            // Handle MM/DD/YYYY format
+            const dateParts = cleanDate.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+            if (dateParts) {
+                return new Date(dateParts[3], dateParts[1] - 1, dateParts[2]);
+            }
+            
+            // Try to parse as other date format
+            const parsedDate = new Date(cleanDate);
+            if (!isNaN(parsedDate.getTime())) {
+                return parsedDate;
+            }
+        }
+        
+        return null;
+    };
+    
+    // Improved date formatting function
+    const formatDate = (dateInput) => {
+        if (!dateInput) return 'N/A';
+        
+        try {
+            // Handle when dateInput is already a formatted string like 'YYYY-MM-DD'
+            if (typeof dateInput === 'string' && dateInput.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                return dateInput;
+            }
+            
+            const d = excelDateToJSDate(dateInput);
+            
+            if (!d || isNaN(d.getTime())) {
+                return 'N/A';
+            }
+            
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            
+            return `${year}-${month}-${day}`;
+        } catch (e) {
+            console.error('Error formatting date:', e, dateInput);
+            return 'N/A';
+        }
+    };
+            
+    // Get CSS class for status
+    const getStatusClass = (status) => {
+        const statusLower = status.toLowerCase();
+        if (statusLower.includes('not done')) {
+            return 'status-pending';
+        }
+        if (statusLower.includes('completed') || statusLower.includes('done')) {
+            return 'status-completed';
+        }
+        if (statusLower.includes('in progress') || statusLower.includes('work in progress')) {
+            return 'status-progress';
+        }
+        return 'status-pending';
+    };
+    
+    // Date range status report generation
+    const generateDateRangeStatus = () => {
+        if (!startDate) {
+            setError('Please select a start date');
+            return;
+        }
+
+        try {
+            if (loadedData.length === 0) {
+                setError('No data available. Please upload data files first.');
+                return;
+            }
+
+            const startDateObj = new Date(startDate);
+            startDateObj.setHours(0, 0, 0, 0);
+            
+            const today = new Date();
+            today.setHours(23, 59, 59, 999);
+
+            console.log(`Generating date range report from ${startDateObj} to ${today}`);
+
+            // Filter activities within date range
+            const activitiesInRange = loadedData.filter(activity => {
+                const activityDateStr = formatDate(activity['Activity Date']);
+                if (activityDateStr === 'N/A') return false;
+                
+                const activityDate = new Date(activityDateStr);
+                return activityDate >= startDateObj && activityDate <= today;
+            });
+
+            console.log(`Found ${activitiesInRange.length} activities in date range`);
+
+            // Group activities by Unique ID
+            const groupedActivities = activitiesInRange.reduce((acc, curr) => {
+                const uniqueId = curr['Unique ID'];
+                if (!uniqueId) return acc;
+                
+                if (!acc[uniqueId]) {
+                    acc[uniqueId] = [];
+                }
+                acc[uniqueId].push({
+                    date: formatDate(curr['Activity Date']),
+                    status: curr['Activity Status']
+                });
+                return acc;
+            }, {});
+
+            // Sort activities by date for each Unique ID
+            Object.keys(groupedActivities).forEach(uniqueId => {
+                groupedActivities[uniqueId].sort((a, b) => 
+                    new Date(a.date) - new Date(b.date)
+                );
+            });
+
+            const report = Object.entries(groupedActivities).map(([uniqueId, activities]) => ({
+                uniqueId,
+                activities
+            }));
+
+            setDateRangeReport(report.sort((a, b) => a.uniqueId.localeCompare(b.uniqueId)));
+            setError('');
+        } catch (error) {
+            setError('Error generating date range report: ' + error.message);
+            console.error(error);
+        }
+    };
+
+    // PDF download function
+    const downloadPDF = () => {
+        if (!statusReport.length) {
+            setError('No data available to download');
+            return;
+        }
+
+        try {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            doc.setFontSize(16);
+            doc.text('Daily Status Report', 20, 20);
+
+            doc.setFontSize(12);
+            doc.text(`Date: ${selectedDate}`, 20, 30);
+            doc.text(`Total Sites: ${statusReport.length}`, 20, 40);
+
+            const headers = ['Unique ID', 'Latest Status'];
+            let yPos = 60;
+            const pageWidth = doc.internal.pageSize.width;
+
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(12);
+            doc.text(headers[0], 20, yPos);
+            doc.text(headers[1], pageWidth/2, yPos);
+
+            doc.setFont('helvetica', 'normal');
+            yPos += 10;
+
+            statusReport.forEach((site, index) => {
+                if (yPos > 250) {
+                    doc.addPage();
+                    yPos = 20;
+                   
+                    doc.setFont('helvetica', 'bold');
+                    doc.text(headers[0], 20, yPos);
+                    doc.text(headers[1], pageWidth/2, yPos);
+                    doc.setFont('helvetica', 'normal');
+                    yPos += 10;
+                }
+
+                doc.text(site.uniqueId, 20, yPos);
+                doc.text(site.latestStatus, pageWidth/2, yPos);
+                yPos += 10;
+            });
+
+            const timestamp = new Date().toLocaleString();
+            doc.setFontSize(10);
+            doc.text(`Generated on: ${timestamp}`, 20, doc.internal.pageSize.height - 10);
+
+            doc.save(`Daily_Status_Report_${selectedDate}.pdf`);
+        } catch (error) {
+            setError('Error generating PDF: ' + error.message);
+            console.error('PDF generation error:', error);
+        }
+    };
+
+    // Improved daily status generation
+    const generateDailyStatus = () => {
+        if (!selectedDate) {
+            setError('Please select a date');
+            return;
+        }
+
+        try {
+            if (loadedData.length === 0) {
+                setError('No data available. Please upload data files first.');
+                return;
+            }
+
+            console.log(`Generating daily status report with ${loadedData.length} records`);
+
+            // Generate a report for all activities
+            const siteStatuses = {};
+            
+            // Group activities by Unique ID
+            loadedData.forEach(activity => {
+                const uniqueId = activity['Unique ID'];
+                if (uniqueId) {
+                    if (!siteStatuses[uniqueId]) {
+                        siteStatuses[uniqueId] = [];
+                    }
+                    
+                    const status = activity['Activity Status'];
+                    if (status) {
+                        siteStatuses[uniqueId].push({
+                            status: status,
+                            date: activity['Activity Date']
+                        });
+                    }
+                }
+            });
+            
+            console.log(`Found data for ${Object.keys(siteStatuses).length} unique IDs`);
+
+            // Create the status report for all records
+            const report = Object.entries(siteStatuses).map(([siteId, statusObjects]) => {
+                const statuses = statusObjects.map(obj => obj.status);
+                return {
+                    uniqueId: siteId,
+                    latestStatus: getMilestoneStatus(statuses)
+                };
+            });
+
+            setStatusReport(report.sort((a, b) => a.uniqueId.localeCompare(b.uniqueId)));
+            setError('');
+        } catch (error) {
+            setError('Error generating status report: ' + error.message);
+            console.error('Error details:', error);
+        }
+    };
+
+    if (!isAuthenticated) {
+        return <LoginScreen onLogin={() => setIsAuthenticated(true)} />;
+    }
+
+
+    
+
+    return (
+        <div className="card">
+            <div className="header">
+                <h1 className="text-2xl font-bold">Central Team Daily Status View</h1>
+                <button onClick={loadAllData} className="btn btn-secondary">
+                    Refresh Data
+                </button>
+                <button onClick={handleLogout} className="btn btn-outline">
+                    Logout
+                </button>
+            </div>
+            
+            {loadedData.length > 0 ? (
+                <div className="data-info text-sm text-gray-600 mb-4">
+                    Loaded {loadedData.length} records from {
+                        [...new Set(loadedData.map(item => item['Unique ID']))].length
+                    } unique IDs
+                </div>
+            ) : (
+                <div className="data-info text-sm text-red-600 mb-4">
+                    No data loaded. Please upload files in the Analysis Dashboard.
+                </div>
+            )}
+            
+            <div className="search-box">
+                <input
+                    type="text"
+                    className="search-input"
+                    placeholder="Enter Unique ID"
+                    value={searchId}
+                    onChange={(e) => setSearchId(e.target.value)}
+                />
+                <button onClick={searchStatusHistory} className="search-button">
+                    Search History
+                </button>
+            </div>
+
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1rem' }}>
+                <div>
+                    <label className="block text-sm font-medium text-gray-700">Select Date</label>
+                    <input
+                        type="date"
+                        value={selectedDate}
+                        onChange={(e) => setSelectedDate(e.target.value)}
+                        className="date-input"
+                    />
+                </div>
+                <button onClick={generateDailyStatus} className="btn">
+                    Generate Status
+                </button>
+                {statusReport.length > 0 && (
+                    <button onClick={downloadPDF} className="btn btn-secondary">
+                        Download PDF
+                    </button>
+                )}
+            </div>
+
+            {error && <div className="error">{error}</div>}
+
+            {statusReport.length > 0 && (
+                <div>
+                    <div className="text-sm text-gray-600 mb-2">
+                        Showing status for {statusReport.length} sites with activities on {selectedDate}
+                    </div>
+                    <table className="table">
+                        <thead>
+                            <tr>
+                                <th>Unique ID</th>
+                                <th>Latest Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {statusReport.map((site, index) => (
+                                <tr key={index}>
+                                    <td>{site.uniqueId}</td>
+                                    <td>
+                                        <span className={`status-badge ${getStatusClass(site.latestStatus)}`}>
+                                            {site.latestStatus}
+                                        </span>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+
+            <div className="mt-8 border-t pt-8">
+                <h2 className="text-xl font-bold mb-4">Date Range Matrix View</h2>
+                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1rem' }}>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">Select Start Date</label>
+                        <input
+                            type="date"
+                            value={startDate}
+                            onChange={(e) => setStartDate(e.target.value)}
+                            className="date-input"
+                        />
+                    </div>
+                    <button onClick={generateMatrixView} className="btn">
+                        Generate Matrix View
+                    </button>
+                    {showMatrix && matrixData && (
+                        <button onClick={exportToExcel} className="btn btn-secondary">
+                            Export to Excel
+                        </button>
+                    )}
+                </div>
+
+                {showMatrix && matrixData && (
+                    <div className="matrix-container">
+                        <div className="text-sm text-gray-600 mb-4">
+                            Showing status matrix from {startDate} to today for {matrixData.ids.length} sites
+                        </div>
+                        <div className="matrix-wrapper">
+                            <div className="fixed-column">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Unique ID</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {matrixData.ids.map((id, index) => (
+                                            <tr key={id}>
+                                                <td>{id}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div className="scroll-container">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            {matrixData.dates.map(date => (
+                                                <th key={date}>{date}</th>
+                                            ))}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {matrixData.ids.map((id, index) => (
+                                            <tr key={id}>
+                                                {matrixData.dates.map(date => (
+                                                    <td key={`${id}-${date}`}>
+                                                        {matrixData.data[id][date].length > 0 && (
+                                                            <div className="status-list">
+                                                                {matrixData.data[id][date].map((status, statusIndex) => (
+                                                                    <span 
+                                                                        key={statusIndex}
+                                                                        className={`status-badge ${getStatusClass(status)}`}
+                                                                    >
+                                                                        {status}
+                                                                    </span>
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                    </td>
+                                                ))}
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {showHistory && historyData && (
+                <div className="history-modal">
+                    <div className="history-content">
+                        <button 
+                            className="close-button" 
+                            onClick={() => setShowHistory(false)}
+                        >
+                            &times;
+                        </button>
+                        <h2 className="text-xl font-bold mb-4">Status History for {searchId}</h2>
+                        <table className="table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {historyData.map((entry, index) => (
+                                    <tr key={index}>
+                                        <td>{entry.date}</td>
+                                        <td>
+                                            <span className={`status-badge ${getStatusClass(entry.status)}`}>
+                                                {entry.status}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
+ReactDOM.render(<CentralTeamView />, document.getElementById('root'));
+    </script>
+ 
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const nav = document.createElement('div');
+            nav.style.padding = '20px';
+            nav.style.textAlign = 'center';
+           
+            const backButton = document.createElement('button');
+            backButton.className = 'btn';
+            backButton.textContent = 'Back to Dashboard';
+            backButton.onclick = () => window.location.href = 'index.html';
+           
+            nav.appendChild(backButton);
+            document.body.insertBefore(nav, document.body.firstChild);
+        });
+    </script>
+</body>
+</html>
